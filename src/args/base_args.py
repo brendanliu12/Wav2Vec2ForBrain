@@ -29,6 +29,7 @@ class B2TDatasetArgsModel(BaseModel):
     sample_rate: int = 50
     remove_punctuation: bool = True
     area: Literal["6v", "44"] = "6v"
+    use_area44_sentence_bias: bool = False
 
 
 class CTCTextDatasetArgsModel(BaseModel):
