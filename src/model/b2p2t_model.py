@@ -139,7 +139,8 @@ class B2P2TModel(B2TModel):
         """
         batch can also be of sub type PhonemeSampleBatch
         """
-        x, targets = batch
+        x = batch.input
+        targets = getattr(batch, "target", None)
         day_idxs = batch.day_idxs
 
         if targets is not None:

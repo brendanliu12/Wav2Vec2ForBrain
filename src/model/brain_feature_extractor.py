@@ -106,7 +106,7 @@ class BrainFeatureExtractor(torch.nn.Module):
         )
 
     def forward(self, batch: PhonemeSampleBatch) -> torch.Tensor:
-        x, _ = batch
+        x = batch.input
 
         batch_size = x.shape[0]
 

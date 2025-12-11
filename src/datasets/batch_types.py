@@ -7,6 +7,7 @@ class SampleBatch(NamedTuple):
     target: Optional[
         torch.Tensor
     ]  # Batch of tokenized targets (i.e. a batch of lists of target ids)
+    target_embedding: Optional[torch.Tensor]
 
     def cuda(self):
         copy = self._replace(
@@ -34,6 +35,7 @@ class B2tSampleBatch(SampleBatch):
     day_idxs: torch.Tensor
     input_lens: torch.Tensor
     target_lens: Optional[torch.Tensor]
+    target_embedding: Optional[torch.Tensor]
 
 
 class PhonemeSampleBatch(B2tSampleBatch):

@@ -29,6 +29,7 @@ class B2TDatasetArgsModel(BaseModel):
     sample_rate: int = 50
     remove_punctuation: bool = True
     area: Literal["6v", "44"] = "6v"
+    predict_sentence_embeddings: bool = False
 
 
 class CTCTextDatasetArgsModel(BaseModel):
@@ -87,6 +88,7 @@ class BaseExperimentArgsModel(BaseModel):
         "a2p_w2vphoneme_head",
         "a2t_w2vphoneme_head",
         "b2p_w2vphoneme_head",
+        "b2p2t_44_sentence_embedding"
     ] = Field("b2t_wav2vec_sharedaggregation")
     log_every_n_batches: int = 10
     scheduler: Literal["step"] = "step"

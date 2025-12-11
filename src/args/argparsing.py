@@ -10,10 +10,14 @@ from src.args.yaml_config import YamlConfig
 from src.experiments.b2t_gru_w2v_experiment import (
     B2TGruAndW2VExperiment,
 )
+from src.experiments.b2t_44_sentence_embedding_experiment import (
+    B2T44SentenceEmbeddingExperiment,
+)
 
 experiments: dict[str, Type[Experiment]] = {
     "b2p2t_gru+w2v": B2TGruAndW2VExperiment,
     "b2p2t_gru+w2v_conformer": B2TGruAndW2VConformerExperiment,
+    "b2p2t_44_sentence_embedding": B2T44SentenceEmbeddingExperiment
 }
 
 
