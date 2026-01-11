@@ -56,6 +56,18 @@ class B2TGruAndW2VConformerArgsModel(B2TArgsModel, B2P2TBrainFeatureExtractorArg
     lm_decode_alpha: float = 0.5
     lm_decode_beta: float = 0.5
     lm_score_boundary: bool = False
+    # --- Rerank LM N-best using a separate sentence-embedding model ---
+    rerank_with_sentence_embeddings: bool = False
+
+    # Path to the *results dir* produced by b2p2t_44_sentence_embedding
+    # (must contain model.pt and config.json)
+    sentence_embedding_results_dir: Optional[str] = None
+
+    # SentenceTransformer used to embed candidate hypotheses
+    sentence_transformer_checkpoint: str = "sentence-transformers/all-mpnet-base-v2"
+
+    # Number of candidates to take from LM decode
+    sentence_rerank_top_k: int = 10
 
 
 class B2TGruAndW2VConformerExperiment(B2TExperiment):
@@ -175,4 +187,8 @@ class B2TGruAndW2VConformerExperiment(B2TExperiment):
             self.config.lm_decode_alpha,
             self.config.lm_decode_beta,
             self.config.lm_score_boundary,
+            rerank_with_sentence_embeddings=self.config.rerank_with_sentence_embeddings,
+            sentence_embedding_results_dir=self.config.sentence_embedding_results_dir,
+            sentence_transformer_checkpoint=self.config.sentence_transformer_checkpoint,
+            sentence_rerank_top_k=self.config.sentence_rerank_top_k,
         )

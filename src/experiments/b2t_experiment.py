@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from src.train.evaluator import DefaultEvaluator
 from src.train.history import DecodedPredictionBatch
 from src.util.batch_sampler import Brain2TextBatchSampler
+import torch
 
 
 class B2TArgsModel(BaseExperimentArgsModel, B2TDatasetArgsModel):
@@ -64,12 +65,46 @@ class B2TExperiment(Experiment):
         )
         return DecodedPredictionBatch(predicted_strings, label_strings)
 
-    def create_optimizer(self) -> Optimizer:
-        def get_trainable_params():
-            return self.model.parameters()
 
-        optim: Any = self._get_optimizer_cls()
-        return optim(get_trainable_params(), lr=self.config.learning_rate)
+    def create_optimizer(self):
+        """
+        Two-group LR:
+        - encoder (brain_encoder): base LR (self.config.learning_rate)
+        - projection head (proj): higher LR (head_lr_multiplier * base LR)
+        """
+        base_lr = float(self.config.learning_rate)
+        head_lr_multiplier = 3.0   # try 10x first (e.g., 3e-6 -> 3e-5)
+        head_lr = base_lr * head_lr_multiplier
+
+        model = self.model
+
+        # These attribute names match BrainToSentenceEmbeddingModel
+        if hasattr(model, "brain_encoder") and hasattr(model, "proj"):
+            encoder_params = list(model.brain_encoder.parameters())
+            head_params = list(model.proj.parameters())
+
+            # Optional safety: ensure we didn’t miss other params
+            # (rare, but helps if you add modules later)
+            encoder_ids = {id(p) for p in encoder_params}
+            head_ids = {id(p) for p in head_params}
+            other_params = [p for p in model.parameters() if id(p) not in encoder_ids | head_ids]
+
+            param_groups = [
+                {"params": encoder_params, "lr": base_lr},
+                {"params": head_params, "lr": head_lr},
+            ]
+            if other_params:
+                # default any "other" parameters to base_lr
+                param_groups.append({"params": other_params, "lr": base_lr})
+
+            print(f"[optimizer] encoder lr={base_lr:.2e}, head lr={head_lr:.2e}, other lr={base_lr:.2e}")
+
+            return torch.optim.Adam(param_groups, weight_decay=1e-4)
+
+        # Fallback for other experiment/model types
+        print(f"[optimizer] single lr={base_lr:.2e} (no brain_encoder/proj attrs found)")
+        return torch.optim.Adam(model.parameters(), lr=base_lr, weight_decay=1e-4)
+
 
     def _create_dataset(self, split: Literal["train", "val", "test"] = "train"):
         return Brain2TextDataset(

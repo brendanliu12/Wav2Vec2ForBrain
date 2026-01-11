@@ -12,7 +12,8 @@ class SampleBatch(NamedTuple):
     def cuda(self):
         copy = self._replace(
             input=self.input.cuda(),
-            target=self.target.cuda() if self.target != None else None,
+            target=self.target.cuda() if self.target is not None else None,
+            target_embedding=self.target_embedding.cuda() if self.target_embedding is not None else None,
         )
         if hasattr(self, "__dict__"):
             # Putting all tensors of subclass attributes to cuda

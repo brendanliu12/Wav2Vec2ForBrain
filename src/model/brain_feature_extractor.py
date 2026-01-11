@@ -1,6 +1,7 @@
 from typing import Optional
 
 import torch
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from pydantic import BaseModel, Field
 
 from src.args.base_args import PRETRAINED_LATENT_SIZES
@@ -107,22 +108,54 @@ class BrainFeatureExtractor(torch.nn.Module):
 
     def forward(self, batch: PhonemeSampleBatch) -> torch.Tensor:
         x = batch.input
-
         batch_size = x.shape[0]
 
-        if self.config.encoder_rnn_type == "lstm":
-            out, _ = self.rnn(
+        # If we have lengths, pack so the RNN ignores padded timesteps entirely.
+        lengths = getattr(batch, "input_lens", None)
+        if lengths is not None:
+            # pack_padded_sequence expects CPU lengths
+            lengths_cpu = lengths.to("cpu")
+            packed_x = pack_padded_sequence(
                 x,
-                (
+                lengths_cpu,
+                batch_first=True,
+                enforce_sorted=False,
+            )
+
+            if self.config.encoder_rnn_type == "lstm":
+                packed_out, _ = self.rnn(
+                    packed_x,
+                    (
+                        self.h_start.unsqueeze(1).repeat(1, batch_size, 1),
+                        self.c_start.unsqueeze(1).repeat(1, batch_size, 1),
+                    ),
+                )
+            else:
+                packed_out, _ = self.rnn(
+                    packed_x,
                     self.h_start.unsqueeze(1).repeat(1, batch_size, 1),
-                    self.c_start.unsqueeze(1).repeat(1, batch_size, 1),
-                ),
+                )
+
+            # Unpack back to padded tensor [B, T_max, hidden*dir]
+            out, _ = pad_packed_sequence(
+                packed_out,
+                batch_first=True,
             )
         else:
-            out, _ = self.rnn(
-                x,
-                self.h_start.unsqueeze(1).repeat(1, batch_size, 1),
-            )
+            # Fallback: no lengths provided, run normally (uses padding as real input)
+            if self.config.encoder_rnn_type == "lstm":
+                out, _ = self.rnn(
+                    x,
+                    (
+                        self.h_start.unsqueeze(1).repeat(1, batch_size, 1),
+                        self.c_start.unsqueeze(1).repeat(1, batch_size, 1),
+                    ),
+                )
+            else:
+                out, _ = self.rnn(
+                    x,
+                    self.h_start.unsqueeze(1).repeat(1, batch_size, 1),
+                )
 
         out = self.fc(out)
         return out

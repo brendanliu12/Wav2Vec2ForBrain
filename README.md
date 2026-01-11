@@ -35,3 +35,11 @@ To run the Wav2Vec2Conformer experiment to reproduce our results, execute `pytho
 
 To run embeddings experiment, execute 
 python run.py  --experiment_type=b2p2t_44_sentence_embedding  --area=44 --predict_sentence_embeddings=true --batch_size=32  --epochs=100 --learning_rate=0.0001  --use_wandb=false  --experiment_name="area44_sentence_embeddings_all-MiniLM-L6-v2" --wav2vec_checkpoint=facebook/wav2vec2-base-960h
+
+To run top k with embedding reranking, run the following two commands
+this to calculate the embeddings
+python run.py --experiment_type=b2p2t_44_sentence_embedding  --epochs=50  --batch_size=32 --learning_rate=0.000003 --use_wandb=false --experiment_name="embed_model_for_rerank" --wav2vec_checkpoint=facebook/wav2vec2-base-960h
+
+this to calculate wav2vec2 with embedding reranking
+python run.py  --experiment_type=b2p2t_gru+w2v_conformer --loss_function=ctc  --epochs=100  --batch_size=32 --learning_rate=0.0001 --use_wandb=false --lm_decode_test_predictions=true --rerank_with_sentence_embeddings=true --sentence_embedding_results_dir="test_out/cache/experiment_results/b2p2t_44_sentence_embedding/2026-01-08_14#27#23" --sentence_rerank_top_k=10 --wav2vec_checkpoint=facebook/wav2vec2-conformer-rope-large-960h-ft  --tokenizer_checkpoint=facebook/wav2vec2-conformer-rope-large-960h-ft --experiment_name="gru+w2v_conformer_rerank_embed"
+

@@ -168,10 +168,12 @@ class B2P2TModel(B2TModel):
         )
         preprocessed_batch = batch.copy_and_change(input=strided_inputs)
         if hasattr(batch, "input_lens"):
-            processed_in_lens = (
-                (batch.input_lens - self.config.unfolder_kernel_len)
-                / self.config.unfolder_stride_len
-            ).to(torch.int32)
+            kernel = self.config.unfolder_kernel_len
+            stride = self.config.unfolder_stride_len
+
+            processed_in_lens = ((batch.input_lens - kernel) // stride) + 1
+            processed_in_lens = processed_in_lens.clamp(min=1).to(torch.long)
+
             preprocessed_batch.input_lens = processed_in_lens
             out = self.neural_decoder.forward(preprocessed_batch)
             out.logit_lens = processed_in_lens

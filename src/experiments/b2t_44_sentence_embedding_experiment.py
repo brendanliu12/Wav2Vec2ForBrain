@@ -44,6 +44,18 @@ class B2T44SentenceEmbeddingExperiment(B2TExperiment):
 
         # 🔹 Infer the embedding dimension from one training sample
         train_ds: Brain2TextDataset = self.dataloader_train.dataset  # type: ignore[attr-defined]
+        print("Sentence embedding dim:", train_ds[0].target_embedding.shape[-1] == 768)
+        for i, sample in enumerate(train_ds):
+            emb = sample.target_embedding
+            if emb.shape[-1] != 768:
+                print(f"❌ Sample {i} has wrong embedding shape: {emb.shape}")
+                break
+        else:
+            print("✅ All target embeddings have shape [768]")
+        print("Number of training sentences:", len(self.dataloader_train.dataset))
+        print("Number of validation sentences:", len(self.dataloader_val.dataset))
+        print("Number of test sentences:", len(self.dataloader_test.dataset))
+
         sample0 = train_ds[0]
         emb_dim = sample0.target_embedding.shape[-1]
 

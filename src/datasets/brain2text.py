@@ -90,8 +90,8 @@ class Brain2TextDataset(BaseDataset):
         self.use_sentence_embeddings = getattr(config, "predict_sentence_embeddings", False)
         self.sentence_transformer = None
         if self.use_sentence_embeddings:
-            #self.sentence_transformer = SentenceTransformer("all-mpnet-base-v2")
-            self.sentence_transformer = SentenceTransformer("all-MiniLM-L6-v2")
+            self.sentence_transformer = SentenceTransformer("all-mpnet-base-v2")
+            #self.sentence_transformer = SentenceTransformer("all-MiniLM-L6-v2")
 
 
         if split == "val":
@@ -191,7 +191,7 @@ class Brain2TextDataset(BaseDataset):
         use_embeddings = getattr(self.config, "predict_sentence_embeddings", False)
 
         # For text/CTC experiments we still require a tokenizer
-        if not use_embeddings and tokenizer is None:
+        if not use_embeddings and tokenizer is None:    
             raise ValueError(
                 "Tokenizer must be provided for text/CTC collate; "
                 "set predict_sentence_embeddings=True to use embedding targets without a tokenizer."
@@ -239,7 +239,7 @@ class Brain2TextDataset(BaseDataset):
                 collated_batch = B2tSampleBatch(
                     input=inputs,
                     target=None,            
-                    target_embedding=target_embs,
+                    target_embedding=target_embs
                 )
                 collated_batch.input_lens = input_lens
                 collated_batch.day_idxs = day_idxs
@@ -265,6 +265,7 @@ class Brain2TextDataset(BaseDataset):
             collated_batch = B2tSampleBatch(
                 input=inputs,
                 target=batch_label_ids,
+                target_embedding=None,
             )
             collated_batch.day_idxs = day_idxs
             collated_batch.input_lens = input_lens

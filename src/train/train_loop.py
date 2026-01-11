@@ -44,7 +44,7 @@ class Trainer:
             self.optimizer.zero_grad()
 
             if self.config.whiteNoiseSD > 0:
-                input, _ = batch
+                input = batch.input
                 noised_input = input + (
                     torch.randn(input.shape, device=input.device)
                     * self.config.whiteNoiseSD
@@ -52,7 +52,7 @@ class Trainer:
                 batch._replace(input=noised_input)
 
             if self.config.constantOffsetSD > 0:
-                input, _ = batch
+                input = batch.input
                 offset_input = input + (
                     torch.randn(
                         [input.shape[0], 1, input.shape[2]], device=input.device
